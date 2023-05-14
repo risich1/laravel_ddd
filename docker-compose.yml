@@ -1,0 +1,115 @@
+networks:
+    backend:
+
+services:
+    mariadb:
+        platform: linux/x86_64
+        image: wodby/mariadb:latest
+        container_name: "${APP_NAME}_mariadb"
+        stop_grace_period: 30s
+        ports:
+            - 3306:3306
+        environment:
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_DATABASE: $DB_DATABASE
+            MYSQL_USER: $DB_USERNAME
+            MYSQL_PASSWORD: root
+        networks:
+            - backend
+    pma:
+        image: phpmyadmin/phpmyadmin
+        container_name: "${APP_NAME}_pma"
+        ports:
+            - 8080:80
+        environment:
+            PMA_HOSTS: mariadb
+            PMA_VERBOSES: mariadb
+            PMA_USER: root
+            PMA_PASSWORD: root
+        networks:
+            - backend
+    php:
+        image: wodby/php:latest
+        container_name: "${APP_NAME}_php"
+        environment:
+            PHP_FPM_USER: wodby
+            PHP_FPM_GROUP: wodby
+            PHP_XHPROF: 1
+            COLUMNS: 80 # Set 80 columns for docker exec -it.
+            ## Read instructions at https://wodby.com/stacks/drupal/docs/local/xdebug/
+            PHP_XDEBUG: 1
+            PHP_XDEBUG_MODE: debug
+            PHP_IDE_CONFIG: serverName=tt
+            PHP_XDEBUG_START_WITH_REQUEST: "yes"
+            PHP_XDEBUG_IDEKEY: "lara"
+            #      PHP_XDEBUG_CLIENT_HOST: 172.17.0.1 # Linux
+            PHP_XDEBUG_CLIENT_HOST: host.docker.internal # macOS
+            PHP_XDEBUG_LOG: /tmp/php-xdebug.log
+        volumes:
+            - ./:/var/www/html
+        networks:
+            - backend
+#    rabbitmq:
+#        image: rabbitmq:3.10.7-management
+#        hostname: rabbitmq
+#        restart: always
+#        environment:
+#            - RABBITMQ_DEFAULT_USER=rmuser
+#            - RABBITMQ_DEFAULT_PASS=rmpassword
+#            - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbit log_levels [{connection,error},{default,error}] disk_free_limit 2147483648
+#        volumes:
+#            - ./rabbitmq:/var/lib/rabbitmq
+#        ports:
+#            - 15672:15672
+#            - 5672:5672
+#        networks:
+#            - backend
+#    redis:
+#        image: 'bitnami/redis:latest'
+#        environment:
+#            - ALLOW_EMPTY_PASSWORD=yes
+#        networks:
+#            - backend
+#        ports:
+#            - 6379:6379
+    nginx:
+        image: wodby/nginx:latest
+        container_name: "${APP_NAME}_nginx"
+        depends_on:
+            - php
+        environment:
+            NGINX_STATIC_OPEN_FILE_CACHE: "off"
+            NGINX_ERROR_LOG_LEVEL: debug
+            NGINX_BACKEND_HOST: php
+            NGINX_SERVER_ROOT: /var/www/html/public
+            NGINX_VHOST_PRESET: php
+        volumes:
+            - ./:/var/www/
+        ports:
+            - 8000:80
+        networks:
+            - backend
+#    clickhouse:
+#        image: clickhouse/clickhouse-server
+#        restart: always
+#        volumes:
+#            - ./resources/clickhouse/config.xml:/etc/clickhouse-server/config.d/config.xml
+#            - ./resources/clickhouse/init:/docker-entrypoint-initdb.d
+#            #      - ./resources/clickhouse/logs/clickhouse-server.err.log:/var/log/clickhouse-server/clickhouse-server.err.log
+#            - ./resources/clickhouse/server:/var/log/clickhouse-server
+#        #    depends_on:
+#        #      - rabbitmq
+#        #      - php
+#        ports:
+#            - 8123:8123
+#            - 9000:9000
+#        networks:
+#            - backend
+#    tabix:
+#        image: spoonest/clickhouse-tabix-web-client
+#        ports:
+#            - 9999:80
+#        networks:
+#            - backend
+
+

@@ -14,16 +14,19 @@ class EmployeeController extends Controller
 {
     public function __construct(
       private readonly CreateEmployeeUseCase $createEmployeeUseCase,
-//      private readonly EditEmployeeUseCase $editEmployeeUseCase,
+//      private readonly EditEmч1ployeeUseCase $editEmployeeUseCase,
 //      private readonly DeleteEmployeeUseCase $deleteEmployeeUseCase
     ) {}
 
     public function create(CreateEmployeeRequest $request): JsonResponse {
         $data = $request->validated();
+
         $dto = new CreateEmployeeDTO(
             $data['name'],
+            $data['surname'],
             $data['phone'],
-            $data['department_id']
+            $data['department_id'],
+            $data['patronymic'],
         );
 
         $this->createEmployeeUseCase->create($dto);

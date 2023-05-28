@@ -2,7 +2,6 @@
 
 namespace App\Modules\Employee\UseCase;
 
-use App\Modules\Employee\Domain\Actions\ICreateEmployee;
 use App\Modules\Employee\Domain\DTO\CreateEmployeeDTO;
 use App\Modules\Employee\Domain\Factory\EmployeeFactory;
 use App\Modules\Employee\Domain\ValueObject\EmployeeName;
